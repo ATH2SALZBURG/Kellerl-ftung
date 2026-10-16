@@ -1,15 +1,11 @@
 name: Messdaten verarbeiten
 
-# Laeuft, sobald das Aussengeraet ein neues Rohpaket hochgeladen hat.
-# Die Action fuegt die Pakete zu Tagesdateien zusammen, raeumt die Rohdaten
-# weg und baut daraus die Datei fuer das Dashboard.
 on:
   push:
     paths:
       - 'roh/**'
-  workflow_dispatch:        # von Hand ausloesbar
+  workflow_dispatch:
 
-# Zwei gleichzeitige Laeufe wuerden sich beim Schreiben in die Quere kommen.
 concurrency:
   group: messdaten
   cancel-in-progress: false
@@ -38,7 +34,7 @@ jobs:
         run: |
           git config user.name  "Kellerlueftung Bot"
           git config user.email "bot@users.noreply.github.com"
-          git add -A tage daten.json roh
+          git add -A tage tagesstatistik.json roh
           if git diff --cached --quiet; then
             echo "Nichts zu committen."
           else
@@ -58,6 +54,11 @@ jobs:
           ref: ${{ github.ref }}
       - name: Aktuellen Stand holen
         run: git pull --ff-only || true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Dashboard-Daten bauen
+        run: python werkzeuge/verarbeiten.py
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
