@@ -1,0 +1,18 @@
+# Niemals Zugangsdaten ins Repository!
+#
+# Die Geraetekonfiguration mit WLAN-Passwort und GitHub-Token gehoert NICHT
+# hierher. Sie bleibt auf dem Rechner und auf dem ESP32.
+config.py
+*config.py
+geheim*
+*.token
+.env
+
+# Python
+__pycache__/
+*.pyc
+
+# Betriebssystem
+Thumbs.db
+.DS_Store
+desktop.ini
