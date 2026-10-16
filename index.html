@@ -1,0 +1,539 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kellerlüftung</title>
+<style>
+  :root {
+    color-scheme: light;
+    --surface-1: #fcfcfb;
+    --plane: #f9f9f7;
+    --ink-1: #0b0b0b;
+    --ink-2: #52514e;
+    --ink-muted: #898781;
+    --grid: #e1e0d9;
+    --axis: #c3c2b7;
+    --rand: rgba(11,11,11,0.10);
+    --innen: #2a78d6;
+    --aussen: #eb6834;
+    --gut: #0ca30c;
+    --warnung: #fab219;
+    --kritisch: #d03b3b;
+    --luefter-band: rgba(42,120,214,0.10);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --surface-1: #1a1a19;
+      --plane: #0d0d0d;
+      --ink-1: #ffffff;
+      --ink-2: #c3c2b7;
+      --ink-muted: #898781;
+      --grid: #2c2c2a;
+      --axis: #383835;
+      --rand: rgba(255,255,255,0.10);
+      --innen: #3987e5;
+      --aussen: #d95926;
+      --luefter-band: rgba(57,135,229,0.16);
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --surface-1: #1a1a19;
+    --plane: #0d0d0d;
+    --ink-1: #ffffff;
+    --ink-2: #c3c2b7;
+    --grid: #2c2c2a;
+    --axis: #383835;
+    --rand: rgba(255,255,255,0.10);
+    --innen: #3987e5;
+    --aussen: #d95926;
+    --luefter-band: rgba(57,135,229,0.16);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 24px 16px 64px;
+    background: var(--plane);
+    color: var(--ink-1);
+    font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  .huelle { max-width: 1100px; margin: 0 auto; }
+
+  header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 12px; margin-bottom: 4px; }
+  h1 { font-size: 24px; margin: 0; letter-spacing: -0.01em; }
+  .stand { color: var(--ink-muted); font-size: 13px; }
+  .kopfzeile-rechts { margin-left: auto; display: flex; gap: 8px; }
+
+  button {
+    font: inherit; font-size: 13px;
+    padding: 6px 12px;
+    border: 1px solid var(--rand);
+    background: var(--surface-1);
+    color: var(--ink-2);
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  button[aria-pressed="true"] { color: var(--ink-1); border-color: var(--axis); font-weight: 600; }
+  button:hover { border-color: var(--axis); }
+
+  .banner {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 14px; margin: 16px 0;
+    border-radius: 10px;
+    border: 1px solid var(--rand);
+    background: var(--surface-1);
+  }
+  .punkt { width: 12px; height: 12px; border-radius: 50%; flex: none; }
+  .banner .text { font-size: 14px; }
+  .banner .text b { font-weight: 600; }
+
+  .kacheln {
+    display: grid; gap: 12px; margin: 16px 0 24px;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  }
+  .kachel {
+    background: var(--surface-1);
+    border: 1px solid var(--rand);
+    border-radius: 10px;
+    padding: 14px 16px;
+  }
+  .kachel .marke { font-size: 12px; color: var(--ink-muted); display: flex; align-items: center; gap: 6px; }
+  .kachel .wert { font-size: 28px; font-weight: 600; letter-spacing: -0.02em; margin-top: 2px; }
+  .kachel .wert .einheit { font-size: 14px; font-weight: 400; color: var(--ink-2); margin-left: 3px; }
+  .kachel .zusatz { font-size: 12px; color: var(--ink-2); margin-top: 2px; }
+  .strich { width: 10px; height: 3px; border-radius: 2px; flex: none; }
+
+  figure {
+    margin: 0 0 24px;
+    background: var(--surface-1);
+    border: 1px solid var(--rand);
+    border-radius: 10px;
+    padding: 16px;
+  }
+  figcaption { margin-bottom: 2px; font-weight: 600; font-size: 15px; }
+  .unterzeile { color: var(--ink-2); font-size: 13px; margin-bottom: 10px; }
+  .legende { display: flex; flex-wrap: wrap; gap: 16px; font-size: 13px; color: var(--ink-2); margin-bottom: 8px; }
+  .legende span { display: inline-flex; align-items: center; gap: 6px; }
+
+  .diagramm { position: relative; width: 100%; }
+  svg { display: block; width: 100%; height: auto; overflow: visible; }
+  .gitter { stroke: var(--grid); stroke-width: 1; }
+  .achse { stroke: var(--axis); stroke-width: 1; }
+  .tick { fill: var(--ink-muted); font-size: 11px; }
+  .linie { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+  .fadenkreuz { stroke: var(--axis); stroke-width: 1; stroke-dasharray: 3 3; }
+  .marker { stroke: var(--surface-1); stroke-width: 2; }
+
+  .hinweis {
+    position: absolute; pointer-events: none; z-index: 5;
+    background: var(--surface-1);
+    border: 1px solid var(--axis);
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-size: 12px;
+    color: var(--ink-1);
+    box-shadow: 0 4px 14px rgba(0,0,0,0.12);
+    white-space: nowrap;
+    opacity: 0; transition: opacity .1s;
+  }
+  .hinweis .zeile { display: flex; align-items: center; gap: 6px; }
+  .hinweis .zeile .zahl { margin-left: auto; font-variant-numeric: tabular-nums; font-weight: 600; }
+
+  table { border-collapse: collapse; width: 100%; font-size: 13px; }
+  th, td { text-align: right; padding: 6px 8px; border-bottom: 1px solid var(--grid); font-variant-numeric: tabular-nums; }
+  th:first-child, td:first-child { text-align: left; font-variant-numeric: normal; }
+  th { color: var(--ink-2); font-weight: 600; }
+  td.grund { text-align: left; color: var(--ink-2); font-variant-numeric: normal; }
+
+  .balkenzeile { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; font-size: 13px; }
+  .balkenzeile .tagname { width: 92px; color: var(--ink-2); flex: none; }
+  .balkenbahn { flex: 1; height: 14px; background: var(--grid); border-radius: 4px; overflow: hidden; display: flex; }
+  .balkenbahn > i { display: block; height: 100%; }
+  .balkenzeile .zahl { width: 64px; text-align: right; font-variant-numeric: tabular-nums; flex: none; }
+
+  .fehler { color: var(--kritisch); }
+  .leer { color: var(--ink-muted); font-style: italic; padding: 24px 0; text-align: center; }
+  details { margin-top: 10px; }
+  summary { cursor: pointer; font-size: 13px; color: var(--ink-2); }
+  footer { color: var(--ink-muted); font-size: 12px; margin-top: 32px; }
+  a { color: var(--innen); }
+</style>
+</head>
+<body>
+<div class="huelle">
+
+<header>
+  <h1>Kellerlüftung</h1>
+  <span class="stand" id="stand">lädt …</span>
+  <span class="kopfzeile-rechts">
+    <button id="btn24" aria-pressed="true">24 Stunden</button>
+    <button id="btn7" aria-pressed="false">7 Tage</button>
+    <button id="btnTheme" title="Hell/Dunkel umschalten">◐</button>
+  </span>
+</header>
+
+<div class="banner" id="banner">
+  <span class="punkt" style="background:var(--ink-muted)"></span>
+  <span class="text">Daten werden geladen …</span>
+</div>
+
+<div class="kacheln" id="kacheln"></div>
+
+<figure>
+  <figcaption>Absolute Luftfeuchtigkeit</figcaption>
+  <div class="unterzeile">Die Größe, nach der entschieden wird. Gelüftet wird, wenn außen mindestens 2&nbsp;g/m³ weniger Wasser in der Luft ist als innen. Hinterlegte Flächen zeigen, wann der Lüfter lief.</div>
+  <div class="legende">
+    <span><i class="strich" style="background:var(--innen)"></i> Innen (Keller)</span>
+    <span><i class="strich" style="background:var(--aussen)"></i> Außen</span>
+    <span><i class="strich" style="background:var(--luefter-band);height:10px;width:14px;border-radius:2px"></i> Lüfter läuft</span>
+  </div>
+  <div class="diagramm" id="d_feuchte"></div>
+</figure>
+
+<figure>
+  <figcaption>Temperatur</figcaption>
+  <div class="unterzeile">Gelüftet wird nur zwischen 3&nbsp;°C und 22&nbsp;°C Außentemperatur, und nur wenn es draußen weniger als 3&nbsp;K wärmer ist als innen.</div>
+  <div class="legende">
+    <span><i class="strich" style="background:var(--innen)"></i> Innen (Keller)</span>
+    <span><i class="strich" style="background:var(--aussen)"></i> Außen</span>
+  </div>
+  <div class="diagramm" id="d_temp"></div>
+</figure>
+
+<figure>
+  <figcaption>Relative Luftfeuchtigkeit</figcaption>
+  <div class="unterzeile">Nur zum Vergleich — nach dieser Größe wird <em>nicht</em> entschieden. Kalte Außenluft kann 90&nbsp;% relative Feuchte haben und trotzdem deutlich trockener sein als die Kellerluft.</div>
+  <div class="legende">
+    <span><i class="strich" style="background:var(--innen)"></i> Innen (Keller)</span>
+    <span><i class="strich" style="background:var(--aussen)"></i> Außen</span>
+  </div>
+  <div class="diagramm" id="d_rel"></div>
+</figure>
+
+<figure>
+  <figcaption>Lüfterlaufzeit je Tag</figcaption>
+  <div class="unterzeile">Wie viele Stunden am Tag tatsächlich gelüftet wurde.</div>
+  <div id="laufzeit"></div>
+</figure>
+
+<figure>
+  <figcaption>Warum nicht gelüftet wurde</figcaption>
+  <div class="unterzeile">Minuten je Tag, aufgeschlüsselt nach der Regel, die das Lüften verhindert hat. Daran lässt sich ablesen, ob ein Grenzwert zu streng eingestellt ist.</div>
+  <div id="gruende"></div>
+</figure>
+
+<figure>
+  <figcaption>Messwerte</figcaption>
+  <div class="unterzeile">Die jüngsten Messungen im Klartext.</div>
+  <div id="tabelle"></div>
+  <details>
+    <summary>Rohdaten herunterladen</summary>
+    <div id="dateien" style="margin-top:8px; font-size:13px;"></div>
+  </details>
+</figure>
+
+<footer id="fuss"></footer>
+</div>
+
+<script>
+const EINHEIT = { ai:"g/m³", aa:"g/m³", d:"g/m³", ti:"°C", ta:"°C", ri:"%", ra:"%" };
+const GRUND_NAMEN = {
+  zu_geringe_differenz: "Außenluft nicht trocken genug",
+  hitze:                "über 22 °C draußen",
+  kondensation:         "außen ≥ 3 K wärmer (Kondensationsgefahr)",
+  frost:                "unter 3 °C draußen",
+  hysterese_aus:        "Differenz unter Ausschaltschwelle",
+  mindestlaufzeit:      "Mindestlaufzeit",
+  funkausfall:          "Funkverbindung unterbrochen",
+  sensorfehler:         "Sensorfehler",
+  sonstiges:            "sonstiges"
+};
+const GRUND_FARBEN = {
+  zu_geringe_differenz: "var(--ink-muted)",
+  hitze:                "var(--aussen)",
+  kondensation:         "var(--warnung)",
+  frost:                "var(--innen)",
+  hysterese_aus:        "var(--axis)",
+  mindestlaufzeit:      "var(--gut)",
+  funkausfall:          "var(--kritisch)",
+  sensorfehler:         "var(--kritisch)",
+  sonstiges:            "var(--grid)"
+};
+const ZEITSTUFEN = { "3":"Funk (Internet)", "2":"am Rechner gestellt", "1":"nach Stromausfall fortgesetzt", "0":"unbekannt" };
+
+let DATEN = null, ZEITRAUM = "tag";
+
+const $ = s => document.querySelector(s);
+const z2 = n => n == null ? "—" : n.toFixed(2);
+const z1 = n => n == null ? "—" : n.toFixed(1);
+const tagkurz = d => d.slice(8,10) + "." + d.slice(5,7) + ".";   // 2026-10-13 -> 13.10.
+const kurzzeit = t => ZEITRAUM === "tag" ? t.slice(11,16) : tagkurz(t.slice(0,10)) + " " + t.slice(11,16);
+
+function punkte() { return DATEN ? (ZEITRAUM === "tag" ? DATEN.tag : DATEN.woche) : []; }
+
+/* ---------------------------------------------------------- Liniendiagramm */
+function zeichneLinien(wirt, reihen, einheit, optionen = {}) {
+  const daten = punkte();
+  wirt.innerHTML = "";
+  if (!daten.length) { wirt.innerHTML = '<p class="leer">Noch keine Daten vorhanden.</p>'; return; }
+
+  const B = 900, H = 260, L = 48, R = 12, O = 12, U = 28;
+  const iB = B - L - R, iH = H - O - U;
+
+  let min = Infinity, max = -Infinity;
+  for (const p of daten) for (const r of reihen) {
+    const v = p[r.feld];
+    if (v != null) { if (v < min) min = v; if (v > max) max = v; }
+  }
+  if (!isFinite(min)) { wirt.innerHTML = '<p class="leer">Keine gültigen Werte im Zeitraum.</p>'; return; }
+  if (min === max) { min -= 1; max += 1; }
+  const polster = (max - min) * 0.12;
+  min -= polster; max += polster;
+
+  const x = i => L + (daten.length === 1 ? iB/2 : (i / (daten.length - 1)) * iB);
+  const y = v => O + iH - ((v - min) / (max - min)) * iH;
+
+  const svgNS = "http://www.w3.org/2000/svg";
+  const svg = document.createElementNS(svgNS, "svg");
+  svg.setAttribute("viewBox", `0 0 ${B} ${H}`);
+  svg.setAttribute("role", "img");
+  const el = (n, a) => { const e = document.createElementNS(svgNS, n); for (const k in a) e.setAttribute(k, a[k]); return e; };
+
+  // Lüfter-Laufzeiten als Hintergrundbänder
+  if (optionen.luefterbaender) {
+    let start = null;
+    for (let i = 0; i <= daten.length; i++) {
+      const an = i < daten.length && daten[i].l > 0.5;
+      if (an && start === null) start = i;
+      if (!an && start !== null) {
+        const x1 = x(start), x2 = x(Math.max(start, i - 1));
+        svg.appendChild(el("rect", { x: x1, y: O, width: Math.max(2, x2 - x1), height: iH, fill: "var(--luefter-band)" }));
+        start = null;
+      }
+    }
+  }
+
+  // Gitter und Y-Beschriftung
+  const stufen = 4;
+  for (let i = 0; i <= stufen; i++) {
+    const v = min + (max - min) * i / stufen, yy = y(v);
+    svg.appendChild(el("line", { x1: L, y1: yy, x2: B - R, y2: yy, class: i === 0 ? "achse" : "gitter" }));
+    const t = el("text", { x: L - 8, y: yy + 4, class: "tick", "text-anchor": "end" });
+    t.textContent = v.toFixed(Math.abs(max - min) < 5 ? 1 : 0);
+    svg.appendChild(t);
+  }
+
+  // X-Beschriftung
+  const schritte = Math.min(6, daten.length);
+  for (let i = 0; i < schritte; i++) {
+    const idx = Math.round(i * (daten.length - 1) / Math.max(1, schritte - 1));
+    const t = el("text", { x: x(idx), y: H - 8, class: "tick", "text-anchor": i === 0 ? "start" : (i === schritte - 1 ? "end" : "middle") });
+    t.textContent = kurzzeit(daten[idx].t);
+    svg.appendChild(t);
+  }
+
+  // Linien (Lücken bei fehlenden Werten)
+  for (const r of reihen) {
+    let d = "", offen = false;
+    daten.forEach((p, i) => {
+      const v = p[r.feld];
+      if (v == null) { offen = false; return; }
+      d += (offen ? "L" : "M") + x(i).toFixed(1) + " " + y(v).toFixed(1) + " ";
+      offen = true;
+    });
+    if (d) svg.appendChild(el("path", { d, class: "linie", stroke: r.farbe }));
+  }
+
+  // Nulllinie bei Differenzdiagrammen
+  if (optionen.nulllinie && min < 0 && max > 0) {
+    svg.appendChild(el("line", { x1: L, y1: y(0), x2: B - R, y2: y(0), class: "achse" }));
+  }
+
+  const fk = el("line", { class: "fadenkreuz", y1: O, y2: O + iH, x1: 0, x2: 0, opacity: 0 });
+  svg.appendChild(fk);
+  const kreise = reihen.map(r => { const c = el("circle", { r: 4.5, fill: r.farbe, class: "marker", opacity: 0 }); svg.appendChild(c); return c; });
+
+  wirt.appendChild(svg);
+
+  const hinweis = document.createElement("div");
+  hinweis.className = "hinweis";
+  wirt.appendChild(hinweis);
+
+  function bewegen(ev) {
+    const kasten = svg.getBoundingClientRect();
+    const px = (ev.touches ? ev.touches[0].clientX : ev.clientX) - kasten.left;
+    const anteil = (px / kasten.width) * B;
+    let i = Math.round(((anteil - L) / iB) * (daten.length - 1));
+    i = Math.max(0, Math.min(daten.length - 1, i));
+    const p = daten[i];
+    fk.setAttribute("x1", x(i)); fk.setAttribute("x2", x(i)); fk.setAttribute("opacity", 1);
+    let html = `<div style="color:var(--ink-2);margin-bottom:4px">${tagkurz(p.t.slice(0,10))} ${p.t.slice(11,16)}</div>`;
+    reihen.forEach((r, k) => {
+      const v = p[r.feld];
+      kreise[k].setAttribute("opacity", v == null ? 0 : 1);
+      if (v != null) { kreise[k].setAttribute("cx", x(i)); kreise[k].setAttribute("cy", y(v)); }
+      html += `<div class="zeile"><i class="strich" style="background:${r.farbe}"></i>${r.name}<span class="zahl">${v == null ? "—" : v.toFixed(2) + " " + einheit}</span></div>`;
+    });
+    if (optionen.luefterbaender) html += `<div class="zeile" style="margin-top:4px;color:var(--ink-2)">Lüfter<span class="zahl">${p.l > 0.5 ? "ein" : "aus"}</span></div>`;
+    hinweis.innerHTML = html;
+    hinweis.style.opacity = 1;
+    const links = Math.min(Math.max(0, px - hinweis.offsetWidth / 2), kasten.width - hinweis.offsetWidth);
+    hinweis.style.left = links + "px";
+    hinweis.style.top = "8px";
+  }
+  function verlassen() { hinweis.style.opacity = 0; fk.setAttribute("opacity", 0); kreise.forEach(c => c.setAttribute("opacity", 0)); }
+  svg.addEventListener("mousemove", bewegen);
+  svg.addEventListener("mouseleave", verlassen);
+  svg.addEventListener("touchmove", bewegen, { passive: true });
+  svg.addEventListener("touchend", verlassen);
+}
+
+/* ----------------------------------------------------------------- Banner */
+function zeichneBanner() {
+  const a = DATEN.aktuell, b = $("#banner");
+  if (!a) { b.innerHTML = '<span class="punkt" style="background:var(--ink-muted)"></span><span class="text">Noch keine Messdaten.</span>'; return; }
+
+  const alter = (Date.now() - new Date(a.t.replace(" ", "T")).getTime()) / 60000;
+  let farbe, text;
+  if (a.s === "funk") { farbe = "var(--kritisch)"; text = "<b>Funkverbindung unterbrochen</b> — der Lüfter bleibt sicherheitshalber aus."; }
+  else if (alter > 45) { farbe = "var(--warnung)"; text = `<b>Keine frischen Daten</b> — letzte Messung vor ${Math.round(alter)} Minuten.`; }
+  else if (a.l > 0.5) { farbe = "var(--gut)"; text = `<b>Lüfter läuft</b> — die Außenluft ist ${z2(a.d)} g/m³ trockener als die Kellerluft.`; }
+  else { farbe = "var(--ink-muted)"; text = `<b>Lüfter aus</b>${DATEN.grund ? " — " + DATEN.grund : ""}.`; }
+  b.innerHTML = `<span class="punkt" style="background:${farbe}"></span><span class="text">${text}</span>`;
+}
+
+/* ---------------------------------------------------------------- Kacheln */
+function zeichneKacheln() {
+  const a = DATEN.aktuell;
+  if (!a) { $("#kacheln").innerHTML = ""; return; }
+  const heute = (DATEN.statistik || []).slice(-1)[0];
+  const stunden = heute ? (heute.luefter_min / 60) : 0;
+  const anteil = heute && heute.minuten ? Math.round(100 * heute.luefter_min / heute.minuten) : 0;
+
+  const k = [
+    { marke: "Keller", farbe: "var(--innen)", wert: z2(a.ai), einheit: "g/m³", zusatz: `${z1(a.ti)} °C · ${z1(a.ri)} %rF` },
+    { marke: "Außen", farbe: "var(--aussen)", wert: z2(a.aa), einheit: "g/m³", zusatz: `${z1(a.ta)} °C · ${z1(a.ra)} %rF` },
+    { marke: "Trocknungsgewinn", wert: (a.d > 0 ? "+" : "") + z2(a.d), einheit: "g/m³", zusatz: a.d >= 2 ? "reicht zum Lüften" : "unter der Einschaltschwelle" },
+    { marke: "Lüfter heute", wert: stunden.toFixed(1), einheit: "h", zusatz: `${anteil} % der erfassten Zeit` }
+  ];
+  $("#kacheln").innerHTML = k.map(x => `
+    <div class="kachel">
+      <div class="marke">${x.farbe ? `<i class="strich" style="background:${x.farbe}"></i>` : ""}${x.marke}</div>
+      <div class="wert">${x.wert}<span class="einheit">${x.einheit}</span></div>
+      <div class="zusatz">${x.zusatz}</div>
+    </div>`).join("");
+}
+
+/* ------------------------------------------------------------- Laufzeiten */
+function zeichneLaufzeit() {
+  const s = DATEN.statistik || [];
+  if (!s.length) { $("#laufzeit").innerHTML = '<p class="leer">Noch keine Tagesdaten.</p>'; return; }
+  const max = Math.max(1, ...s.map(t => t.luefter_min));
+  $("#laufzeit").innerHTML = s.slice(-14).map(t => `
+    <div class="balkenzeile">
+      <span class="tagname">${tagkurz(t.tag)}</span>
+      <span class="balkenbahn"><i style="width:${(100 * t.luefter_min / max).toFixed(1)}%;background:var(--innen)"></i></span>
+      <span class="zahl">${(t.luefter_min / 60).toFixed(1)} h</span>
+    </div>`).join("");
+}
+
+/* ----------------------------------------------------------------- Gründe */
+function zeichneGruende() {
+  const s = DATEN.statistik || [];
+  if (!s.length) { $("#gruende").innerHTML = '<p class="leer">Noch keine Tagesdaten.</p>'; return; }
+
+  const summe = {};
+  for (const t of s) for (const g in t.gruende) summe[g] = (summe[g] || 0) + t.gruende[g];
+  const sortiert = Object.entries(summe).sort((a, b) => b[1] - a[1]);
+
+  const balken = s.slice(-14).map(t => {
+    const gesamt = Math.max(1, t.minuten);
+    const stuecke = Object.entries(t.gruende).sort((a, b) => b[1] - a[1])
+      .map(([g, m]) => `<i title="${GRUND_NAMEN[g] || g}: ${m} min" style="width:${(100 * m / gesamt).toFixed(2)}%;background:${GRUND_FARBEN[g] || "var(--grid)"}"></i>`).join("");
+    const lauf = `<i title="Lüfter lief: ${t.luefter_min} min" style="width:${(100 * t.luefter_min / gesamt).toFixed(2)}%;background:var(--gut)"></i>`;
+    return `<div class="balkenzeile">
+      <span class="tagname">${tagkurz(t.tag)}</span>
+      <span class="balkenbahn">${lauf}${stuecke}</span>
+      <span class="zahl">${Math.round(t.minuten / 60)} h</span>
+    </div>`;
+  }).join("");
+
+  const legende = `<div class="legende" style="margin:10px 0 2px">
+    <span><i class="strich" style="background:var(--gut)"></i>Lüfter lief</span>` +
+    sortiert.map(([g]) => `<span><i class="strich" style="background:${GRUND_FARBEN[g] || "var(--grid)"}"></i>${GRUND_NAMEN[g] || g}</span>`).join("") + `</div>`;
+
+  const tabelle = `<table style="margin-top:12px">
+    <thead><tr><th>Grund</th><th>Minuten</th><th>Anteil</th></tr></thead>
+    <tbody>${sortiert.map(([g, m]) => {
+      const ges = sortiert.reduce((x, y) => x + y[1], 0) || 1;
+      return `<tr><td class="grund">${GRUND_NAMEN[g] || g}</td><td>${m}</td><td>${(100 * m / ges).toFixed(1)} %</td></tr>`;
+    }).join("")}</tbody></table>`;
+
+  $("#gruende").innerHTML = legende + balken + tabelle;
+}
+
+/* ---------------------------------------------------------------- Tabelle */
+function zeichneTabelle() {
+  const d = punkte().slice(-25).reverse();
+  if (!d.length) { $("#tabelle").innerHTML = '<p class="leer">Noch keine Daten.</p>'; return; }
+  $("#tabelle").innerHTML = `<table>
+    <thead><tr><th>Zeit</th><th>Innen °C</th><th>Innen %rF</th><th>Innen g/m³</th><th>Außen °C</th><th>Außen %rF</th><th>Außen g/m³</th><th>Differenz</th><th>Lüfter</th></tr></thead>
+    <tbody>${d.map(p => `<tr>
+      <td>${tagkurz(p.t.slice(0,10))} ${p.t.slice(11,16)}</td><td>${z1(p.ti)}</td><td>${z1(p.ri)}</td><td>${z2(p.ai)}</td>
+      <td>${z1(p.ta)}</td><td>${z1(p.ra)}</td><td>${z2(p.aa)}</td><td>${z2(p.d)}</td>
+      <td>${p.l > 0.5 ? "ein" : "aus"}</td></tr>`).join("")}</tbody></table>`;
+
+  const tage = [...new Set((DATEN.statistik || []).map(t => t.tag))].slice(-7).reverse();
+  $("#dateien").innerHTML = tage.length
+    ? tage.map(t => `<a href="tage/${t}.csv">${t}.csv</a>`).join(" · ")
+    : "noch keine Tagesdateien";
+}
+
+/* ------------------------------------------------------------------ Aufbau */
+function allesZeichnen() {
+  zeichneBanner(); zeichneKacheln();
+  zeichneLinien($("#d_feuchte"), [
+    { feld: "ai", name: "Innen", farbe: "var(--innen)" },
+    { feld: "aa", name: "Außen", farbe: "var(--aussen)" }], "g/m³", { luefterbaender: true });
+  zeichneLinien($("#d_temp"), [
+    { feld: "ti", name: "Innen", farbe: "var(--innen)" },
+    { feld: "ta", name: "Außen", farbe: "var(--aussen)" }], "°C");
+  zeichneLinien($("#d_rel"), [
+    { feld: "ri", name: "Innen", farbe: "var(--innen)" },
+    { feld: "ra", name: "Außen", farbe: "var(--aussen)" }], "%");
+  zeichneLaufzeit(); zeichneGruende(); zeichneTabelle();
+}
+
+function zeitraumSetzen(neu) {
+  ZEITRAUM = neu;
+  $("#btn24").setAttribute("aria-pressed", neu === "tag");
+  $("#btn7").setAttribute("aria-pressed", neu === "woche");
+  allesZeichnen();
+}
+$("#btn24").onclick = () => zeitraumSetzen("tag");
+$("#btn7").onclick = () => zeitraumSetzen("woche");
+$("#btnTheme").onclick = () => {
+  const dunkel = document.documentElement.getAttribute("data-theme") === "dark";
+  document.documentElement.setAttribute("data-theme", dunkel ? "light" : "dark");
+  try { localStorage.setItem("thema", dunkel ? "light" : "dark"); } catch (e) {}
+};
+try { const t = localStorage.getItem("thema"); if (t) document.documentElement.setAttribute("data-theme", t); } catch (e) {}
+
+fetch("daten.json?" + Date.now())
+  .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
+  .then(d => {
+    DATEN = d;
+    $("#stand").textContent = "Stand " + d.erzeugt;
+    $("#fuss").innerHTML = `Zeitquelle: ${ZEITSTUFEN[d.zeitstufe] || "unbekannt"} · ${(d.tag || []).length} Messungen in 24 Stunden · Daten werden alle 15 Minuten hochgeladen`;
+    allesZeichnen();
+  })
+  .catch(e => {
+    $("#stand").textContent = "";
+    $("#banner").innerHTML = `<span class="punkt" style="background:var(--kritisch)"></span><span class="text"><b>Keine Daten gefunden</b> — <code>daten.json</code> fehlt noch. Sobald das Außengerät das erste Paket hochgeladen hat, erscheint hier die Auswertung.</span>`;
+  });
+</script>
+</body>
+</html>
