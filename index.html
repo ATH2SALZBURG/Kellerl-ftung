@@ -168,9 +168,12 @@
 <header>
   <h1>Kellerlüftung</h1>
   <span class="stand" id="stand">lädt …</span>
-  <span class="kopfzeile-rechts">
-    <button id="btn24" aria-pressed="true">24 Stunden</button>
-    <button id="btn7" aria-pressed="false">7 Tage</button>
+  <span class="kopfzeile-rechts" id="zeitraeume">
+    <button data-zeitraum="tag" aria-pressed="true">24 Stunden</button>
+    <button data-zeitraum="woche" aria-pressed="false">7 Tage</button>
+    <button data-zeitraum="monat" aria-pressed="false">Monat</button>
+    <button data-zeitraum="jahr" aria-pressed="false">Jahr</button>
+    <button data-zeitraum="gesamt" aria-pressed="false">Gesamt</button>
     <button id="btnTheme" title="Hell/Dunkel umschalten">◐</button>
   </span>
 </header>
@@ -270,9 +273,22 @@ const $ = s => document.querySelector(s);
 const z2 = n => n == null ? "—" : n.toFixed(2);
 const z1 = n => n == null ? "—" : n.toFixed(1);
 const tagkurz = d => d.slice(8,10) + "." + d.slice(5,7) + ".";   // 2026-10-13 -> 13.10.
-const kurzzeit = t => ZEITRAUM === "tag" ? t.slice(11,16) : tagkurz(t.slice(0,10)) + " " + t.slice(11,16);
+const tagjahr = d => tagkurz(d) + d.slice(0,4);                  // 13.10.2026
+// Ab Monatsansicht aufwaerts ist die Uhrzeit nicht mehr aussagekraeftig:
+// dort steht je Punkt ein Tagesmittel beziehungsweise ein Stundenmittel.
+const TAGESRASTER = new Set(["jahr", "gesamt"]);
+function kurzzeit(t) {
+  if (ZEITRAUM === "tag") return t.slice(11,16);
+  if (TAGESRASTER.has(ZEITRAUM)) return tagkurz(t.slice(0,10));
+  return tagkurz(t.slice(0,10)) + " " + t.slice(11,16);
+}
+function langzeit(t) {
+  return TAGESRASTER.has(ZEITRAUM)
+    ? tagjahr(t.slice(0,10))
+    : tagkurz(t.slice(0,10)) + " " + t.slice(11,16);
+}
 
-function punkte() { return DATEN ? (ZEITRAUM === "tag" ? DATEN.tag : DATEN.woche) : []; }
+function punkte() { return DATEN ? (DATEN[ZEITRAUM] || []) : []; }
 
 /* ---------------------------------------------------------- Liniendiagramm */
 function zeichneLinien(wirt, reihen, einheit, optionen = {}) {
@@ -370,7 +386,7 @@ function zeichneLinien(wirt, reihen, einheit, optionen = {}) {
     i = Math.max(0, Math.min(daten.length - 1, i));
     const p = daten[i];
     fk.setAttribute("x1", x(i)); fk.setAttribute("x2", x(i)); fk.setAttribute("opacity", 1);
-    let html = `<div style="color:var(--ink-2);margin-bottom:4px">${tagkurz(p.t.slice(0,10))} ${p.t.slice(11,16)}</div>`;
+    let html = `<div style="color:var(--ink-2);margin-bottom:4px">${langzeit(p.t)}${TAGESRASTER.has(ZEITRAUM) ? " (Tagesmittel)" : ""}</div>`;
     reihen.forEach((r, k) => {
       const v = p[r.feld];
       kreise[k].setAttribute("opacity", v == null ? 0 : 1);
@@ -432,13 +448,45 @@ function zeichneKacheln() {
 }
 
 /* ------------------------------------------------------------- Laufzeiten */
-function zeichneLaufzeit() {
+const MONATE = ["Jän","Feb","Mär","Apr","Mai","Jun","Jul","Aug","Sep","Okt","Nov","Dez"];
+
+/* Balken folgen dem gewählten Zeitraum: bis zum Monat tageweise, darüber
+   monatsweise — 366 Tagesbalken wären unlesbar. */
+function statistikZeilen() {
   const s = DATEN.statistik || [];
+  if (!s.length) return [];
+  if (!TAGESRASTER.has(ZEITRAUM)) {
+    const anzahl = ZEITRAUM === "monat" ? 31 : 14;
+    return s.slice(-anzahl).map(t => ({
+      name: tagkurz(t.tag), minuten: t.minuten,
+      luefter_min: t.luefter_min, gruende: t.gruende
+    }));
+  }
+  const nachMonat = new Map();
+  for (const t of s) {
+    const schluessel = t.tag.slice(0, 7);
+    if (!nachMonat.has(schluessel))
+      nachMonat.set(schluessel, { name: MONATE[+schluessel.slice(5, 7) - 1] + " " + schluessel.slice(0, 4),
+                                  minuten: 0, luefter_min: 0, gruende: {} });
+    const m = nachMonat.get(schluessel);
+    m.minuten += t.minuten;
+    m.luefter_min += t.luefter_min;
+    for (const g in t.gruende) m.gruende[g] = (m.gruende[g] || 0) + t.gruende[g];
+  }
+  const zeilen = [...nachMonat.entries()].sort().map(e => e[1]);
+  return ZEITRAUM === "jahr" ? zeilen.slice(-12) : zeilen;
+}
+
+function zeichneLaufzeit() {
+  const s = statistikZeilen();
   if (!s.length) { $("#laufzeit").innerHTML = '<p class="leer">Noch keine Tagesdaten.</p>'; return; }
   const max = Math.max(1, ...s.map(t => t.luefter_min));
-  $("#laufzeit").innerHTML = s.slice(-14).map(t => `
+  const summe = DATEN.summe || {};
+  const kopf = TAGESRASTER.has(ZEITRAUM) && summe.luefter_min != null
+    ? `<div class="unterzeile">Insgesamt ${(summe.luefter_min / 60).toFixed(1)} h gelüftet an ${summe.tage} erfassten Tagen${summe.erster_tag ? ", seit " + tagjahr(summe.erster_tag) : ""}.</div>` : "";
+  $("#laufzeit").innerHTML = kopf + s.map(t => `
     <div class="balkenzeile">
-      <span class="tagname">${tagkurz(t.tag)}</span>
+      <span class="tagname">${t.name}</span>
       <span class="balkenbahn"><i style="width:${(100 * t.luefter_min / max).toFixed(1)}%;background:var(--innen)"></i></span>
       <span class="zahl">${(t.luefter_min / 60).toFixed(1)} h</span>
     </div>`).join("");
@@ -446,20 +494,20 @@ function zeichneLaufzeit() {
 
 /* ----------------------------------------------------------------- Gründe */
 function zeichneGruende() {
-  const s = DATEN.statistik || [];
+  const s = statistikZeilen();
   if (!s.length) { $("#gruende").innerHTML = '<p class="leer">Noch keine Tagesdaten.</p>'; return; }
 
   const summe = {};
   for (const t of s) for (const g in t.gruende) summe[g] = (summe[g] || 0) + t.gruende[g];
   const sortiert = Object.entries(summe).sort((a, b) => b[1] - a[1]);
 
-  const balken = s.slice(-14).map(t => {
+  const balken = s.map(t => {
     const gesamt = Math.max(1, t.minuten);
     const stuecke = Object.entries(t.gruende).sort((a, b) => b[1] - a[1])
       .map(([g, m]) => `<i title="${GRUND_NAMEN[g] || g}: ${m} min" style="width:${(100 * m / gesamt).toFixed(2)}%;background:${GRUND_FARBEN[g] || "var(--grid)"}"></i>`).join("");
     const lauf = `<i title="Lüfter lief: ${t.luefter_min} min" style="width:${(100 * t.luefter_min / gesamt).toFixed(2)}%;background:var(--gut)"></i>`;
     return `<div class="balkenzeile">
-      <span class="tagname">${tagkurz(t.tag)}</span>
+      <span class="tagname">${t.name}</span>
       <span class="balkenbahn">${lauf}${stuecke}</span>
       <span class="zahl">${Math.round(t.minuten / 60)} h</span>
     </div>`;
@@ -486,7 +534,7 @@ function zeichneTabelle() {
   $("#tabelle").innerHTML = `<table>
     <thead><tr><th>Zeit</th><th>Innen °C</th><th>Innen %rF</th><th>Innen g/m³</th><th>Außen °C</th><th>Außen %rF</th><th>Außen g/m³</th><th>Differenz</th><th>Lüfter</th></tr></thead>
     <tbody>${d.map(p => `<tr>
-      <td>${tagkurz(p.t.slice(0,10))} ${p.t.slice(11,16)}</td><td>${z1(p.ti)}</td><td>${z1(p.ri)}</td><td>${z2(p.ai)}</td>
+      <td>${langzeit(p.t)}</td><td>${z1(p.ti)}</td><td>${z1(p.ri)}</td><td>${z2(p.ai)}</td>
       <td>${z1(p.ta)}</td><td>${z1(p.ra)}</td><td>${z2(p.aa)}</td><td>${z2(p.d)}</td>
       <td>${p.l > 0.5 ? "ein" : "aus"}</td></tr>`).join("")}</tbody></table>`;
 
@@ -513,26 +561,33 @@ function allesZeichnen() {
 
 function zeitraumSetzen(neu) {
   ZEITRAUM = neu;
-  $("#btn24").setAttribute("aria-pressed", neu === "tag");
-  $("#btn7").setAttribute("aria-pressed", neu === "woche");
+  document.querySelectorAll("#zeitraeume button[data-zeitraum]").forEach(b =>
+    b.setAttribute("aria-pressed", b.dataset.zeitraum === neu));
+  try { localStorage.setItem("zeitraum", neu); } catch (e) {}
   allesZeichnen();
 }
-$("#btn24").onclick = () => zeitraumSetzen("tag");
-$("#btn7").onclick = () => zeitraumSetzen("woche");
+document.querySelectorAll("#zeitraeume button[data-zeitraum]").forEach(b =>
+  b.onclick = () => zeitraumSetzen(b.dataset.zeitraum));
 $("#btnTheme").onclick = () => {
   const dunkel = document.documentElement.getAttribute("data-theme") === "dark";
   document.documentElement.setAttribute("data-theme", dunkel ? "light" : "dark");
   try { localStorage.setItem("thema", dunkel ? "light" : "dark"); } catch (e) {}
 };
 try { const t = localStorage.getItem("thema"); if (t) document.documentElement.setAttribute("data-theme", t); } catch (e) {}
+try { const z = localStorage.getItem("zeitraum"); if (z) ZEITRAUM = z; } catch (e) {}
 
 fetch("daten.json?" + Date.now())
   .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
   .then(d => {
     DATEN = d;
     $("#stand").textContent = "Stand " + d.erzeugt;
-    $("#fuss").innerHTML = `Zeitquelle: ${ZEITSTUFEN[d.zeitstufe] || "unbekannt"} · ${(d.tag || []).length} Messungen in 24 Stunden · Daten werden alle 15 Minuten hochgeladen`;
-    allesZeichnen();
+    const su = d.summe || {};
+    $("#fuss").innerHTML = `Zeitquelle: ${ZEITSTUFEN[d.zeitstufe] || "unbekannt"} · `
+      + `${(d.tag || []).length} Messungen in 24 Stunden · `
+      + `${su.tage || 0} Tage erfasst${su.erster_tag ? " seit " + tagjahr(su.erster_tag) : ""} · `
+      + `Daten werden alle 15 Minuten hochgeladen`;
+    if (!DATEN[ZEITRAUM]) ZEITRAUM = "tag";
+    zeitraumSetzen(ZEITRAUM);
   })
   .catch(e => {
     $("#stand").textContent = "";
