@@ -407,15 +407,19 @@ function zeichneBanner() {
 
 /* ---------------------------------------------------------------- Kacheln */
 function zeichneKacheln() {
-  const a = DATEN.aktuell;
+  // Bei einem Funkausfall hat der jüngste Datensatz keine Messwerte.
+  // Dann die letzte echte Messung zeigen, statt nur Striche.
+  const a = DATEN.letzte_messung || DATEN.aktuell;
   if (!a) { $("#kacheln").innerHTML = ""; return; }
+  const veraltet = DATEN.aktuell && DATEN.aktuell !== a
+    ? ` · Stand ${tagkurz(a.t.slice(0,10))} ${a.t.slice(11,16)}` : "";
   const heute = (DATEN.statistik || []).slice(-1)[0];
   const stunden = heute ? (heute.luefter_min / 60) : 0;
   const anteil = heute && heute.minuten ? Math.round(100 * heute.luefter_min / heute.minuten) : 0;
 
   const k = [
-    { marke: "Keller", farbe: "var(--innen)", wert: z2(a.ai), einheit: "g/m³", zusatz: `${z1(a.ti)} °C · ${z1(a.ri)} %rF` },
-    { marke: "Außen", farbe: "var(--aussen)", wert: z2(a.aa), einheit: "g/m³", zusatz: `${z1(a.ta)} °C · ${z1(a.ra)} %rF` },
+    { marke: "Keller", farbe: "var(--innen)", wert: z2(a.ai), einheit: "g/m³", zusatz: `${z1(a.ti)} °C · ${z1(a.ri)} %rF${veraltet}` },
+    { marke: "Außen", farbe: "var(--aussen)", wert: z2(a.aa), einheit: "g/m³", zusatz: `${z1(a.ta)} °C · ${z1(a.ra)} %rF${veraltet}` },
     { marke: "Trocknungsgewinn", wert: (a.d > 0 ? "+" : "") + z2(a.d), einheit: "g/m³", zusatz: a.d >= 2 ? "reicht zum Lüften" : "unter der Einschaltschwelle" },
     { marke: "Lüfter heute", wert: stunden.toFixed(1), einheit: "h", zusatz: `${anteil} % der erfassten Zeit` }
   ];
