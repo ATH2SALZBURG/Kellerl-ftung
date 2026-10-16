@@ -14,10 +14,24 @@ Wird von der GitHub-Action aufgerufen, laeuft aber auch von Hand:
 from __future__ import annotations
 
 import json
-import shutil
 from collections import defaultdict
 from datetime import datetime, timedelta
 from pathlib import Path
+
+# Die Geraete schreiben oesterreichische Ortszeit. Die GitHub-Action laeuft
+# dagegen in UTC -- ohne Umrechnung waere das 24-Stunden-Fenster um ein bis
+# zwei Stunden verschoben und der Zeitstempel im Dashboard falsch.
+try:
+    from zoneinfo import ZoneInfo
+    ZONE = ZoneInfo("Europe/Vienna")
+except Exception:          # pragma: no cover -- Notnagel ohne Zeitzonendaten
+    ZONE = None
+
+
+def jetzt_ortszeit():
+    if ZONE is None:
+        return datetime.now()
+    return datetime.now(ZONE).replace(tzinfo=None)
 
 WURZEL = Path(__file__).resolve().parent.parent
 ROH = WURZEL / "roh"
@@ -107,7 +121,7 @@ def tagesdateien_aktualisieren(saetze):
 
 
 def alle_saetze_laden(tage_zurueck):
-    grenze = datetime.now() - timedelta(days=tage_zurueck)
+    grenze = jetzt_ortszeit() - timedelta(days=tage_zurueck)
     saetze = []
     if not TAGE.exists():
         return saetze
@@ -240,13 +254,23 @@ def hauptprogramm():
     alle = alle_saetze_laden(TAGE_IM_DASHBOARD)
     punkte = [punkt(s) for s in alle]
 
-    grenze_tag = datetime.now() - timedelta(hours=24)
+    grenze_tag = jetzt_ortszeit() - timedelta(hours=24)
     letzte_24h = [p for p in punkte
                   if datetime.strptime(p["t"], "%Y-%m-%d %H:%M:%S") >= grenze_tag]
 
+    # Fuer die Kacheln den letzten Satz mit echten Messwerten nehmen: Ist der
+    # juengste Eintrag ein Funkausfall, stehen dort keine Zahlen, und die
+    # Kacheln zeigen sonst nur Striche.
+    letzte_messung = None
+    for p in reversed(punkte):
+        if p["ai"] is not None and p["aa"] is not None:
+            letzte_messung = p
+            break
+
     daten = {
-        "erzeugt": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "erzeugt": jetzt_ortszeit().strftime("%Y-%m-%d %H:%M:%S"),
         "aktuell": punkte[-1] if punkte else None,
+        "letzte_messung": letzte_messung,
         "zeitstufe": alle[-1]["zeitstufe"] if alle else None,
         "grund": alle[-1].get("grund") if alle else None,
         "tag": letzte_24h,
