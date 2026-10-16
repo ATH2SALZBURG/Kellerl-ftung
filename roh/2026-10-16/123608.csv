@@ -1,4 +1,0 @@
-zeitstempel;zeitstufe;status;t_innen;rh_innen;ah_innen;t_aussen;rh_aussen;ah_aussen;differenz;alter_s;luefter;grund
-2026-10-16 12:32:01;1;funk;15.2;85.8;;;;;;;0;noch keine Daten vom Aussengeraet empfangen
-2026-10-16 12:33:01;1;funk;15.3;86.6;;;;;;;0;noch keine Daten vom Aussengeraet empfangen
-2026-10-16 12:34:01;1;ok;15.4;83.7;10.98;14.0;79.3;9.52;1.46;51;0;Differenz 1.46 g/m3 < Einschaltschwelle 2.00
