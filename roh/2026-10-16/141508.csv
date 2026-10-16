@@ -1,7 +1,0 @@
-zeitstempel;zeitstufe;status;t_innen;rh_innen;ah_innen;t_aussen;rh_aussen;ah_aussen;differenz;alter_s;luefter;grund
-2026-10-16 14:09:25;3;funk;15.6;89.8;;16.4;69.5;;;597;0;letzter Empfang vor 597 s (Grenze 180 s)
-2026-10-16 14:10:25;3;ok;15.6;90.0;11.98;15.9;72.6;9.84;2.14;35;1;Differenz 2.14 g/m3 >= Einschaltschwelle 2.00
-2026-10-16 14:11:26;3;ok;15.6;89.7;11.89;15.6;75.6;10.01;1.89;34;1;Mindestlaufzeit 60 s von 300 s
-2026-10-16 14:12:26;3;ok;15.6;89.8;11.92;15.3;76.8;10.02;1.89;34;1;Mindestlaufzeit 120 s von 300 s
-2026-10-16 14:13:26;3;ok;15.6;89.4;11.84;15.3;77.5;10.07;1.76;34;1;Mindestlaufzeit 180 s von 300 s
-2026-10-16 14:14:26;3;ok;15.5;89.3;11.82;15.2;78.1;10.12;1.70;34;1;Mindestlaufzeit 240 s von 300 s
