@@ -311,6 +311,15 @@ def tagesreihe(statistik, tage_zurueck=None):
 
 
 def hauptprogramm():
+    # Die Ordner muessen existieren, bevor irgendetwas anderes passiert.
+    # Sonst scheitert spaeter "git add -A tage ... roh" in der Action mit
+    # Exitcode 128, weil der Pfad nicht gefunden wird -- GitHub entfernt
+    # leere Ordner, und nach dem Loeschen aller Messdaten sind sie leer.
+    TAGE.mkdir(exist_ok=True)
+    (TAGE / ".gitkeep").write_text("", encoding="utf-8")
+    ROH.mkdir(exist_ok=True)
+    (ROH / ".gitkeep").write_text("", encoding="utf-8")
+
     saetze, rohdateien = rohdaten_einlesen()
     print(f"{len(saetze)} Datensaetze aus {len(rohdateien)} Rohdateien gelesen.")
 
