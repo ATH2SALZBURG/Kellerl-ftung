@@ -8,6 +8,11 @@ geheim*
 *.token
 .env
 
+# Abgeleitete Datei -- entsteht bei jedem Lauf neu aus tage/ und wird direkt
+# veroeffentlicht. Nicht einchecken: 96 Vollversionen am Tag waeren der
+# groesste Posten in der Versionsgeschichte.
+daten.json
+
 # Python
 __pycache__/
 *.pyc
