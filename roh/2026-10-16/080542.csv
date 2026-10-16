@@ -1,0 +1,5 @@
+zeitstempel;zeitstufe;status;t_innen;rh_innen;ah_innen;t_aussen;rh_aussen;ah_aussen;differenz;alter_s;luefter;grund
+2026-10-16 08:02:39;3;ok;20.0;54.5;9.41;20.2;55.7;9.74;-0.33;8;0;Differenz -0.33 g/m3 < Einschaltschwelle 2.00
+2026-10-16 08:03:39;3;ok;20.0;54.6;9.41;20.2;55.7;9.74;-0.33;69;0;Differenz -0.33 g/m3 < Einschaltschwelle 2.00
+2026-10-16 08:04:39;3;ok;20.0;54.6;9.43;20.2;55.7;9.74;-0.31;129;0;Differenz -0.31 g/m3 < Einschaltschwelle 2.00
+2026-10-16 08:05:40;3;funk;20.0;54.5;;20.2;55.7;;;189;0;letzter Empfang vor 189 s (Grenze 180 s)
