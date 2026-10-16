@@ -3,4 +3,6 @@ zeitstempel;zeitstufe;status;t_innen;rh_innen;ah_innen;t_aussen;rh_aussen;ah_aus
 2026-10-16 08:03:39;3;ok;20.0;54.6;9.41;20.2;55.7;9.74;-0.33;69;0;Differenz -0.33 g/m3 < Einschaltschwelle 2.00
 2026-10-16 08:04:39;3;ok;20.0;54.6;9.43;20.2;55.7;9.74;-0.31;129;0;Differenz -0.31 g/m3 < Einschaltschwelle 2.00
 2026-10-16 08:05:40;3;funk;20.0;54.5;;20.2;55.7;;;189;0;letzter Empfang vor 189 s (Grenze 180 s)
+2026-10-16 09:20:24;3;ok;20.0;55.0;9.46;20.6;54.4;9.73;-0.26;24;0;Differenz -0.26 g/m3 < Einschaltschwelle 2.00
+2026-10-16 09:21:24;3;ok;20.0;54.9;9.45;20.6;54.2;9.71;-0.26;25;0;Differenz -0.26 g/m3 < Einschaltschwelle 2.00
 2026-10-16 09:25:00;3;ok;20.0;54.0;9.5;10.0;80.0;7.5;2.0;3;0;Test
