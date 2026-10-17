@@ -1,0 +1,21 @@
+zeitstempel;zeitstufe;status;t_innen;rh_innen;ah_innen;t_aussen;rh_aussen;ah_aussen;differenz;alter_s;luefter;grund
+2026-10-17 09:21:18;3;lebt;;;;8.2;90.8;7.59;;;0;Lebenszeichen, Puffer 0 Zeilen, WLAN Grasl-Unlimited -79 dBm
+2026-10-17 09:14:12;3;ok;14.7;87.3;10.98;8.3;90.0;7.58;3.41;38;1;laeuft weiter, Differenz 3.41 g/m3
+2026-10-17 09:15:12;3;ok;14.7;87.4;11.01;8.3;90.0;7.58;3.43;98;1;laeuft weiter, Differenz 3.43 g/m3
+2026-10-17 09:16:12;3;ok;14.8;87.4;11.02;8.3;90.0;7.55;3.47;21;1;laeuft weiter, Differenz 3.47 g/m3
+2026-10-17 09:17:13;3;ok;14.7;87.4;11.02;8.3;90.0;7.55;3.47;81;1;laeuft weiter, Differenz 3.47 g/m3
+2026-10-17 09:18:13;3;ok;14.7;87.5;11.03;8.3;90.0;7.55;3.48;141;1;laeuft weiter, Differenz 3.48 g/m3
+2026-10-17 09:19:14;3;funk;14.7;87.4;;8.3;90.0;;;202;0;letzter Empfang vor 202 s (Grenze 180 s)
+2026-10-17 09:20:15;3;funk;14.8;87.8;;8.3;90.0;;;263;0;letzter Empfang vor 263 s (Grenze 180 s)
+2026-10-17 09:21:15;3;funk;14.8;88.1;;8.3;90.0;;;324;0;letzter Empfang vor 324 s (Grenze 180 s)
+2026-10-17 09:22:16;3;ok;14.9;88.3;11.19;8.2;90.8;7.59;3.61;59;1;Differenz 3.61 g/m3 >= Einschaltschwelle 2.00
+2026-10-17 09:23:16;3;ok;14.8;87.7;11.11;8.1;91.1;7.59;3.52;58;1;Mindestlaufzeit 60 s von 300 s
+2026-10-17 09:24:17;3;ok;14.8;87.6;11.11;8.1;91.3;7.60;3.50;58;1;Mindestlaufzeit 120 s von 300 s
+2026-10-17 09:39:07;3;lebt;;;;8.5;90.8;7.75;;;0;Lebenszeichen, Puffer 12 Zeilen, WLAN Grasl-Unlimited -79 dBm
+2026-10-17 09:40:05;3;lebt;;;;8.5;90.3;7.72;;;0;Lebenszeichen, Puffer 13 Zeilen, WLAN Grasl-Unlimited -72 dBm
+2026-10-17 09:25:17;3;ok;14.8;87.4;11.06;8.0;92.1;7.60;3.46;58;1;Mindestlaufzeit 180 s von 300 s
+2026-10-17 09:26:17;3;ok;14.8;87.3;11.04;8.0;92.1;7.60;3.44;118;1;Mindestlaufzeit 240 s von 300 s
+2026-10-17 09:27:17;3;ok;14.8;87.1;11.01;8.0;92.1;7.60;3.41;178;1;laeuft weiter, Differenz 3.41 g/m3
+2026-10-17 09:28:18;3;funk;14.8;87.3;;8.0;92.1;;;239;0;letzter Empfang vor 239 s (Grenze 180 s)
+2026-10-17 09:29:18;3;funk;14.8;87.8;;8.0;92.1;;;299;0;letzter Empfang vor 299 s (Grenze 180 s)
+2026-10-17 09:30:18;3;funk;14.8;88.2;;8.0;92.1;;;360;0;letzter Empfang vor 360 s (Grenze 180 s)
