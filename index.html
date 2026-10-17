@@ -418,6 +418,18 @@ function zeichneBanner() {
   else if (alter > 45) { farbe = "var(--warnung)"; text = `<b>Keine frischen Daten</b> — letzte Messung vor ${Math.round(alter)} Minuten.`; }
   else if (a.l > 0.5) { farbe = "var(--gut)"; text = `<b>Lüfter läuft</b> — die Außenluft ist ${z2(a.d)} g/m³ trockener als die Kellerluft.`; }
   else { farbe = "var(--ink-muted)"; text = `<b>Lüfter aus</b>${DATEN.grund ? " — " + DATEN.grund : ""}.`; }
+
+  // Lebenszeichen des Außengeräts. Es zählt nicht als Messung (siehe
+  // ist_messung in verarbeiten.py), ist aber die einzige Auskunft darüber,
+  // ob das Gerät draußen überhaupt noch läuft, wenn keine Daten kommen.
+  const lz = DATEN.letztes_lebenszeichen;
+  if (lz) {
+    const altLz = Math.round((Date.now() - new Date(lz.t.replace(" ", "T")).getTime()) / 60000);
+    const pegel = (lz.grund || "").match(/(-\d+)\s*dBm/);
+    text += `<span style="color:var(--ink-muted)"> · Außengerät meldete sich vor ${altLz} min`
+          + `${pegel ? ` (WLAN ${pegel[1]} dBm)` : ""}</span>`;
+  }
+
   b.innerHTML = `<span class="punkt" style="background:${farbe}"></span><span class="text">${text}</span>`;
 }
 
