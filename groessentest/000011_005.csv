@@ -1,0 +1,6 @@
+zeitstempel;zeitstufe;status;t_innen;rh_innen;ah_innen;t_aussen;rh_aussen;ah_aussen;differenz;alter_s;luefter;grund
+2026-10-17 09:21:18;3;lebt;;;;8.2;90.8;7.59;;;0;Lebenszeichen, Puffer 0 Zeilen, WLAN Grasl-Unlimited -79 dBm
+2026-10-17 09:14:12;3;ok;14.7;87.3;10.98;8.3;90.0;7.58;3.41;38;1;laeuft weiter, Differenz 3.41 g/m3
+2026-10-17 09:15:12;3;ok;14.7;87.4;11.01;8.3;90.0;7.58;3.43;98;1;laeuft weiter, Differenz 3.43 g/m3
+2026-10-17 09:16:12;3;ok;14.8;87.4;11.02;8.3;90.0;7.55;3.47;21;1;laeuft weiter, Differenz 3.47 g/m3
+2026-10-17 09:17:13;3;ok;14.7;87.4;11.02;8.3;90.0;7.55;3.47;81;1;laeuft weiter, Differenz 3.47 g/m3
