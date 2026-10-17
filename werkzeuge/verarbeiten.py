@@ -156,6 +156,23 @@ def vorhandene_tage():
     return sorted(tage)
 
 
+def ist_messung(satz):
+    """Echter Messdatensatz des Innengeraets -- kein Lebenszeichen.
+
+    Das Aussengeraet legt alle paar Minuten eine Statuszeile mit status='lebt'
+    ab, damit aus der Ferne erkennbar ist, dass es laeuft. Darin stehen keine
+    Innenwerte, und in der Luefterspalte steht eine 0 -- das Aussengeraet weiss
+    gar nicht, ob der Luefter laeuft.
+
+    Werden diese Zeilen wie Messungen behandelt, ist die Folge sichtbar und
+    falsch: Im Diagramm reisst jede davon das "Luefter laeuft"-Band auf, so
+    dass ein durchlaufender Luefter wie wildes Takten aussieht, die
+    Tageslaufzeit faellt zu niedrig aus, und unter "Warum nicht gelueftet
+    wurde" erscheinen Statusmeldungen als Gruende.
+    """
+    return satz.get("status") != "lebt"
+
+
 def punkt(satz):
     return {
         "t": satz["zeitstempel"],
@@ -228,8 +245,12 @@ def grund_gruppe(satz):
 
 
 def tag_auswerten(tag):
-    """Kennzahlen und Tagesmittel fuer einen Tag."""
-    saetze = tag_laden(tag)
+    """Kennzahlen und Tagesmittel fuer einen Tag.
+
+    Nur echte Messungen -- Lebenszeichen wuerden die Laufzeit druecken und
+    unter den Abschaltgruenden auftauchen. Siehe ist_messung().
+    """
+    saetze = [s for s in tag_laden(tag) if ist_messung(s)]
     if not saetze:
         return None
     punkte = [punkt(s) for s in saetze]
@@ -287,7 +308,7 @@ def punkte_laden(tage_zurueck):
     for tag in vorhandene_tage():
         if tag < grenze:
             continue
-        punkte.extend(punkt(s) for s in tag_laden(tag))
+        punkte.extend(punkt(s) for s in tag_laden(tag) if ist_messung(s))
     punkte.sort(key=lambda p: p["t"])
     return punkte
 
@@ -367,6 +388,7 @@ def hauptprogramm():
         "letzte_messung": letzte_messung,
         "zeitstufe": None,
         "grund": None,
+        "letztes_lebenszeichen": None,
         "tag": letzte_24h,
         "woche": rastern(letzte_woche, ZEITRAEUME["woche"][1]),
         "monat": rastern(alle, monat_raster),
@@ -381,14 +403,26 @@ def hauptprogramm():
         },
     }
 
-    # Zeitstufe und Begruendung des juengsten Satzes
-    if geaendert or vorhandene_tage():
-        letzte_tage = vorhandene_tage()
-        if letzte_tage:
-            letzte_saetze = tag_laden(letzte_tage[-1])
-            if letzte_saetze:
-                daten["zeitstufe"] = letzte_saetze[-1]["zeitstufe"]
-                daten["grund"] = letzte_saetze[-1].get("grund")
+    # Zeitstufe und Begruendung des juengsten Satzes -- und getrennt davon das
+    # juengste Lebenszeichen. Beides aus demselben Durchlauf: Das Lebenszeichen
+    # zaehlt nicht als Messung, ist aber die einzige Auskunft darueber, ob das
+    # Aussengeraet ueberhaupt noch laeuft.
+    letzte_tage = vorhandene_tage()
+    if letzte_tage:
+        letzte_saetze = tag_laden(letzte_tage[-1])
+        messungen = [s for s in letzte_saetze if ist_messung(s)]
+        if messungen:
+            daten["zeitstufe"] = messungen[-1]["zeitstufe"]
+            daten["grund"] = messungen[-1].get("grund")
+        for satz in reversed(letzte_saetze):
+            if not ist_messung(satz):
+                daten["letztes_lebenszeichen"] = {
+                    "t": satz["zeitstempel"],
+                    "grund": satz.get("grund"),
+                    "ta": zahl(satz["t_aussen"]),
+                    "ra": zahl(satz["rh_aussen"]),
+                }
+                break
 
     ZIEL_JSON.write_text(
         json.dumps(daten, ensure_ascii=False, separators=(",", ":")),
