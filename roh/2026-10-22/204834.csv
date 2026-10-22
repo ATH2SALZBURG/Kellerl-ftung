@@ -1,0 +1,8 @@
+zeitstempel;zeitstufe;status;t_innen;rh_innen;ah_innen;t_aussen;rh_aussen;ah_aussen;differenz;alter_s;luefter;grund
+2026-10-22 20:41:20;3;ok;13.9;81.1;9.72;6.6;79.3;6.00;3.72;0;1;Aussenluft 3.72 g/m3 trockener (Schwelle 1.50)
+2026-10-22 20:42:37;3;ok;13.9;81.4;9.75;6.8;79.2;6.04;3.71;0;1;Aussenluft 3.71 g/m3 trockener (Schwelle 1.50)
+2026-10-22 20:43:37;3;ok;13.9;81.2;9.73;6.8;79.1;6.02;3.71;0;1;Aussenluft 3.70 g/m3 trockener (Schwelle 1.50)
+2026-10-22 20:44:37;3;ok;13.9;81.1;9.72;6.7;79.1;6.00;3.72;0;1;Aussenluft 3.72 g/m3 trockener (Schwelle 1.50)
+2026-10-22 20:45:15;3;ok;13.9;81.6;9.78;6.7;79.2;6.00;3.78;0;1;Aussenluft 3.78 g/m3 trockener (Schwelle 1.50)
+2000-01-01 00:00:00;0;funk;13.9;81.3;9.74;;;;;;0;kein Kontakt zum Aussengeraet seit ? s (Grenze 300 s)
+2000-01-01 00:01:00;0;funk;13.9;80.5;9.66;;;;;;0;kein Kontakt zum Aussengeraet seit ? s (Grenze 300 s)
