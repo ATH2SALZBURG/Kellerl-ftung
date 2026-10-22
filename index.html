@@ -118,7 +118,18 @@
   .legende { display: flex; flex-wrap: wrap; gap: 16px; font-size: 13px; color: var(--ink-2); margin-bottom: 8px; }
   .legende span { display: inline-flex; align-items: center; gap: 6px; }
 
-  .diagramm { position: relative; width: 100%; }
+  /* Am Handy gehört der Finger im Diagramm dem Diagramm, nicht der
+     Textauswahl. Ohne das legt iOS beim Draufbleiben den Auswahlbalken
+     mit "Kopieren | Nachschlagen" darüber, statt den Messwert zu zeigen.
+     touch-action: pan-y lässt das Scrollen der Seite weiter zu — nur die
+     seitliche Bewegung wertet das Diagramm selbst aus. */
+  .diagramm {
+    position: relative; width: 100%;
+    touch-action: pan-y;
+    -webkit-user-select: none; user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
+  }
   svg { display: block; width: 100%; height: auto; overflow: visible; }
   .gitter { stroke: var(--grid); stroke-width: 1; }
   .achse { stroke: var(--axis); stroke-width: 1; }
@@ -187,7 +198,7 @@
 
 <figure>
   <figcaption>Absolute Luftfeuchtigkeit</figcaption>
-  <div class="unterzeile">Die Größe, nach der entschieden wird. Gelüftet wird, wenn außen mindestens 2&nbsp;g/m³ weniger Wasser in der Luft ist als innen. Hinterlegte Flächen zeigen, wann der Lüfter lief.</div>
+  <div class="unterzeile">Die Größe, nach der entschieden wird. Gelüftet wird, wenn außen mindestens 1,5&nbsp;g/m³ weniger Wasser in der Luft ist als innen. Hinterlegte Flächen zeigen, wann der Lüfter lief.</div>
   <div class="legende">
     <span><i class="strich" style="background:var(--innen)"></i> Innen (Keller)</span>
     <span><i class="strich" style="background:var(--aussen)"></i> Außen</span>
@@ -198,7 +209,7 @@
 
 <figure>
   <figcaption>Temperatur</figcaption>
-  <div class="unterzeile">Gelüftet wird nur zwischen 3&nbsp;°C und 22&nbsp;°C Außentemperatur, und nur wenn es draußen weniger als 3&nbsp;K wärmer ist als innen.</div>
+  <div class="unterzeile">Geschützt wird der Keller: Fällt er auf 4&nbsp;°C oder darunter, wird nicht mehr gelüftet. Draußen darf es beliebig kalt sein — kalte Luft ist die trockenste. Nicht gelüftet wird über 22&nbsp;°C Außentemperatur und wenn es draußen mehr als 3&nbsp;K wärmer ist als innen.</div>
   <div class="legende">
     <span><i class="strich" style="background:var(--innen)"></i> Innen (Keller)</span>
     <span><i class="strich" style="background:var(--aussen)"></i> Außen</span>
@@ -405,8 +416,16 @@ function zeichneLinien(wirt, reihen, einheit, optionen = {}) {
   function verlassen() { hinweis.style.opacity = 0; fk.setAttribute("opacity", 0); kreise.forEach(c => c.setAttribute("opacity", 0)); }
   svg.addEventListener("mousemove", bewegen);
   svg.addEventListener("mouseleave", verlassen);
+
+  // Am Handy muss schon das AUFSETZEN des Fingers den Wert zeigen, nicht erst
+  // das Wischen. Vorher war nur touchmove gebunden: Wer auf eine Stelle
+  // tippte und liegen blieb, bekam gar nichts -- und iOS hielt das für den
+  // Versuch, Text zu markieren, und legte den Auswahlbalken mit
+  // "Kopieren | Nachschlagen" über das Diagramm.
+  svg.addEventListener("touchstart", bewegen, { passive: true });
   svg.addEventListener("touchmove", bewegen, { passive: true });
   svg.addEventListener("touchend", verlassen);
+  svg.addEventListener("touchcancel", verlassen);
 }
 
 /* ----------------------------------------------------------------- Banner */
