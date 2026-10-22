@@ -435,8 +435,15 @@ function zeichneBanner() {
 
   const alter = (Date.now() - new Date(a.t.replace(" ", "T")).getTime()) / 60000;
   let farbe, text;
-  if (a.s === "funk") { farbe = "var(--kritisch)"; text = "<b>Funkverbindung unterbrochen</b> — der Lüfter bleibt sicherheitshalber aus."; }
-  else if (alter > 45) { farbe = "var(--warnung)"; text = `<b>Keine frischen Daten</b> — letzte Messung vor ${Math.round(alter)} Minuten.`; }
+  // Das ALTER zuerst. Ein alter Datensatz sagt nichts über das Jetzt — stand
+  // beim letzten Hochladen gerade "funk" drin, meldete das Dashboard sonst
+  // stundenlang einen Funkausfall, den es längst nicht mehr gibt.
+  if (alter > 45) {
+    farbe = "var(--warnung)";
+    const std = alter >= 120 ? `${(alter / 60).toFixed(1)} Stunden` : `${Math.round(alter)} Minuten`;
+    text = `<b>Keine frischen Daten</b> — letzte Messung vor ${std}. Das Außengerät hat seitdem nichts hochgeladen.`;
+  }
+  else if (a.s === "funk") { farbe = "var(--kritisch)"; text = "<b>Funkverbindung unterbrochen</b> — der Lüfter bleibt sicherheitshalber aus."; }
   else if (a.l > 0.5) { farbe = "var(--gut)"; text = `<b>Lüfter läuft</b> — die Außenluft ist ${z2(a.d)} g/m³ trockener als die Kellerluft.`; }
   else { farbe = "var(--ink-muted)"; text = `<b>Lüfter aus</b>${DATEN.grund ? " — " + DATEN.grund : ""}.`; }
 
