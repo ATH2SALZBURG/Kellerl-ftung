@@ -246,12 +246,13 @@ const EINHEIT = { ai:"g/m³", aa:"g/m³", d:"g/m³", ti:"°C", ta:"°C", ri:"%",
 const GRUND_NAMEN = {
   zu_geringe_differenz: "Außenluft nicht trocken genug",
   hitze:                "über 22 °C draußen",
-  kondensation:         "außen ≥ 3 K wärmer (Kondensationsgefahr)",
-  frost:                "unter 3 °C draußen",
-  hysterese_aus:        "Differenz unter Ausschaltschwelle",
+  kondensation:         "außen mehr als 3 K wärmer (Kondensationsgefahr)",
+  frost:                "Keller auf 4 °C oder darunter",
   mindestlaufzeit:      "Mindestlaufzeit",
-  funkausfall:          "Funkverbindung unterbrochen",
+  funkausfall:          "kein Kontakt zum Außengerät",
   sensorfehler:         "Sensorfehler",
+  lueftet:              "lüftet",
+  hysterese_aus:        "Differenz unter Ausschaltschwelle",
   sonstiges:            "sonstiges"
 };
 const GRUND_FARBEN = {
@@ -263,6 +264,7 @@ const GRUND_FARBEN = {
   mindestlaufzeit:      "var(--gut)",
   funkausfall:          "var(--kritisch)",
   sensorfehler:         "var(--kritisch)",
+  lueftet:              "var(--gut)",
   sonstiges:            "var(--grid)"
 };
 const ZEITSTUFEN = { "3":"Funk (Internet)", "2":"am Rechner gestellt", "1":"nach Stromausfall fortgesetzt", "0":"unbekannt" };
