@@ -219,15 +219,34 @@ def rastern(punkte, minuten):
             for k in sorted(eimer)]
 
 
+# Seit dem 22.10.2026 schickt das Innengeraet die Begruendung als EINEN
+# Buchstaben statt als Satz. Der ausgeschriebene Text machte 41 Prozent der
+# gespeicherten Daten aus und wiederholte dabei nur Zahlen, die ohnehin in
+# eigenen Spalten stehen.
+#
+# Die alten Texte muessen weiter verstanden werden: In tage/ liegen Dateien
+# aus der Zeit davor, und die sollen nicht ploetzlich als "sonstiges" gelten.
+GRUND_CODES = {
+    "T": ("lueftet", "Außenluft ist trockener"),
+    "M": ("mindestlaufzeit", "Mindestlaufzeit läuft noch"),
+    "F": ("frost", "Keller zu kalt"),
+    "H": ("hitze", "draußen zu warm"),
+    "K": ("kondensation", "Kondensationsgefahr"),
+    "D": ("zu_geringe_differenz", "Unterschied zu klein"),
+    "U": ("funkausfall", "kein Kontakt zum Außengerät"),
+    "S": ("sensorfehler", "Messwerte unbrauchbar"),
+}
+
+# Alte Langtexte -> dieselben Gruppen.
 GRUND_GRUPPEN = [
     ("frost", ("Frostgrenze",)),
     ("hitze", ("Hitzegrenze",)),
     ("kondensation", ("Kondensationsgefahr",)),
     ("mindestlaufzeit", ("Mindestlaufzeit",)),
-    ("zu_geringe_differenz", ("Einschaltschwelle",)),
+    ("zu_geringe_differenz", ("Einschaltschwelle", "Unterschied")),
     ("hysterese_aus", ("Ausschaltschwelle",)),
     ("sensorfehler", ("unplausibel",)),
-    ("funkausfall", ("Empfang", "Aussengeraet empfangen")),
+    ("funkausfall", ("Empfang", "Aussengeraet empfangen", "Kontakt")),
 ]
 
 
@@ -237,11 +256,43 @@ def grund_gruppe(satz):
         return "funkausfall"
     if status == "sensor":
         return "sensorfehler"
-    grund = satz.get("grund") or ""
+    grund = (satz.get("grund") or "").strip()
+    if grund in GRUND_CODES:
+        return GRUND_CODES[grund][0]
     for name, stichworte in GRUND_GRUPPEN:
         if any(w in grund for w in stichworte):
             return name
     return "sonstiges"
+
+
+def grund_lesbar(satz):
+    """Begruendung in Worten, fuer die Anzeige im Dashboard.
+
+    Aus dem Kennbuchstaben und den Zahlen des Datensatzes wird wieder ein
+    ganzer Satz -- dieselbe Auskunft wie frueher, nur nicht gespeichert.
+    """
+    grund = (satz.get("grund") or "").strip()
+    if grund not in GRUND_CODES:
+        return grund or None          # alter Langtext, unveraendert zeigen
+
+    text = GRUND_CODES[grund][1]
+    diff = zahl(satz.get("differenz"))
+    if grund in ("T", "D") and diff is not None:
+        return "%s (%.2f g/m³)" % (text, diff)
+    if grund == "F":
+        t = zahl(satz.get("t_innen"))
+        return "%s (%.1f °C)" % (text, t) if t is not None else text
+    if grund == "H":
+        t = zahl(satz.get("t_aussen"))
+        return "%s (%.1f °C)" % (text, t) if t is not None else text
+    if grund == "K":
+        ti, ta = zahl(satz.get("t_innen")), zahl(satz.get("t_aussen"))
+        if ti is not None and ta is not None:
+            return "%s (außen %.1f K wärmer)" % (text, ta - ti)
+    if grund == "U":
+        alter = zahl(satz.get("alter_s"))
+        return "%s (seit %d s)" % (text, alter) if alter is not None else text
+    return text
 
 
 def tag_auswerten(tag):
@@ -413,7 +464,7 @@ def hauptprogramm():
         messungen = [s for s in letzte_saetze if ist_messung(s)]
         if messungen:
             daten["zeitstufe"] = messungen[-1]["zeitstufe"]
-            daten["grund"] = messungen[-1].get("grund")
+            daten["grund"] = grund_lesbar(messungen[-1])
         for satz in reversed(letzte_saetze):
             if not ist_messung(satz):
                 daten["letztes_lebenszeichen"] = {
