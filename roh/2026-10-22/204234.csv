@@ -1,0 +1,6 @@
+zeitstempel;zeitstufe;status;t_innen;rh_innen;ah_innen;t_aussen;rh_aussen;ah_aussen;differenz;alter_s;luefter;grund
+2026-10-22 20:36:30;3;ok;13.9;81.8;9.80;6.9;80.1;6.17;3.63;0;1;Aussenluft 3.63 g/m3 trockener (Schwelle 1.50)
+2026-10-22 20:37:31;3;ok;13.9;80.7;9.65;7.0;79.6;6.15;3.50;0;1;Aussenluft 3.50 g/m3 trockener (Schwelle 1.50)
+2026-10-22 20:38:31;3;ok;13.9;80.2;9.58;7.0;79.6;6.15;3.43;60;1;Aussenluft 3.42 g/m3 trockener (Schwelle 1.50)
+2026-10-22 20:39:31;3;ok;13.9;80.2;9.59;7.0;79.6;6.15;3.44;120;1;Aussenluft 3.44 g/m3 trockener (Schwelle 1.50)
+2026-10-22 20:40:20;3;ok;13.9;80.6;9.66;6.5;79.7;5.99;3.67;0;1;Aussenluft 3.67 g/m3 trockener (Schwelle 1.50)
