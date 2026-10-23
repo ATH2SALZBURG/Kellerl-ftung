@@ -87,8 +87,23 @@ def zeile_zerlegen(zeile: str):
     if satz["zeitstempel"] == "zeitstempel":
         return None
     try:
-        datetime.strptime(satz["zeitstempel"], "%Y-%m-%d %H:%M:%S")
+        wann = datetime.strptime(satz["zeitstempel"], "%Y-%m-%d %H:%M:%S")
     except ValueError:
+        return None
+
+    # Datensaetze ohne gestellte Uhr aussortieren.
+    #
+    # Startet das Innengeraet neu, laeuft seine Uhr bis zur naechsten
+    # Zeitnachricht vom Aussengeraet auf dem 1.1.2000. Solche Zeilen sind
+    # messtechnisch in Ordnung, lassen sich aber nirgends einordnen: Sie
+    # erzeugen einen Phantomtag im Jahr 2000, der im Zeitraum "Gesamt"
+    # auftaucht, und sie ueberschreiben einander, weil mehrere Neustarts
+    # dieselben Uhrzeiten vergeben.
+    #
+    # Hier und nicht erst beim Abholen am Laptop: Das Aussengeraet laedt
+    # seinen Puffer auch selbst hoch, und dieser Weg filterte bisher nichts.
+    # Dreimal ist dadurch derselbe Phantomtag entstanden.
+    if wann.year < 2020:
         return None
     return satz
 
