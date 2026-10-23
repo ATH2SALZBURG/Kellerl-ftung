@@ -1,0 +1,4 @@
+zeitstempel;zeitstufe;status;t_innen;rh_innen;ah_innen;t_aussen;rh_aussen;ah_aussen;differenz;alter_s;luefter;grund
+2000-01-01 00:00:00;0;funk;14.1;90.5;10.95;;;;;;0;U
+2026-10-23 20:00:15;3;ok;14.1;91.0;10.99;12.5;79.8;8.74;2.25;0;1;T
+2026-10-23 20:01:45;3;ok;14.0;90.8;10.95;12.1;75.4;8.09;2.86;0;1;M
