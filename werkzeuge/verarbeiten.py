@@ -310,6 +310,39 @@ def grund_lesbar(satz):
     return text
 
 
+def dauern(saetze, hoechstens=15.0):
+    """Wie viele Minuten jeder Datensatz vertritt.
+
+    Frueher wurde einfach gezaehlt: ein Datensatz = eine Minute. Das stimmte,
+    solange im Minutentakt gemessen wurde. Seit dem 15.11.2026 misst die
+    Anlage alle fuenf Minuten -- gezaehlte Datensaetze waeren dann ein
+    Fuenftel der echten Laufzeit.
+
+    Deshalb zaehlt jeder Datensatz den Abstand bis zum naechsten. Das rechnet
+    alte und neue Daten gleichermassen richtig, ohne sie umschreiben zu
+    muessen.
+
+    Luecken werden bei hoechstens gedeckelt: Stand die Anlage zwei Stunden,
+    soll der letzte Datensatz davor nicht zwei Stunden Laufzeit erben.
+    """
+    zeiten = []
+    for s in saetze:
+        try:
+            zeiten.append(datetime.strptime(s["zeitstempel"], "%Y-%m-%d %H:%M:%S"))
+        except ValueError:
+            zeiten.append(None)
+
+    werte = []
+    for i, t in enumerate(zeiten):
+        d = None
+        if t is not None and i + 1 < len(zeiten) and zeiten[i + 1] is not None:
+            d = (zeiten[i + 1] - t).total_seconds() / 60.0
+        if d is None or d < 0:
+            d = werte[-1] if werte else 1.0
+        werte.append(min(d, hoechstens))
+    return werte
+
+
 def tag_auswerten(tag):
     """Kennzahlen und Tagesmittel fuer einen Tag.
 
@@ -320,18 +353,21 @@ def tag_auswerten(tag):
     if not saetze:
         return None
     punkte = [punkt(s) for s in saetze]
-    gruende = defaultdict(int)
-    luefter_min = 0
-    for satz in saetze:
+    gruende = defaultdict(float)
+    luefter_min = 0.0
+    for satz, dauer in zip(saetze, dauern(saetze)):
         if satz["luefter"] == "1":
-            luefter_min += 1
+            luefter_min += dauer
         else:
-            gruende[grund_gruppe(satz)] += 1
+            gruende[grund_gruppe(satz)] += dauer
+    luefter_min = int(round(luefter_min))
+    gruende = {k: int(round(v)) for k, v in gruende.items() if round(v)}
 
     mittel = mitteln(punkte, tag + " 12:00:00")
     eintrag = {
         "tag": tag,
-        "minuten": len(saetze),
+        # Erfasste MINUTEN, nicht Anzahl der Datensaetze -- siehe dauern().
+        "minuten": int(round(sum(dauern(saetze)))),
         "luefter_min": luefter_min,
         "gruende": dict(gruende),
     }
